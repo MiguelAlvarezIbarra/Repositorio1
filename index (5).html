@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StoreSearch — Documentación del Proyecto</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: #1e1e2e;
+      --accent: #ff6b35;
+      --accent2: #ffc107;
+      --text: #e8e8f0;
+      --muted: #7a7a9a;
+      --card: #13131c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.3rem;
+      color: var(--text);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .logo span { color: var(--accent); }
+
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text);
+      background: var(--border);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      position: relative;
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,107,53,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.3);
+      color: var(--accent);
+      font-size: 0.75rem; font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 540px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-cta {
+      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.8rem;
+      border-radius: 8px;
+      font-weight: 600; font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer; border: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #e55a28; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    .hero-meta {
+      margin-top: 3rem;
+      display: flex; gap: 2.5rem; justify-content: center; flex-wrap: wrap;
+    }
+    .hero-meta-item { text-align: center; }
+    .hero-meta-item .val {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem; font-weight: 800;
+      color: var(--text);
+    }
+    .hero-meta-item .lbl {
+      font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 5rem 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .section-tag {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem; font-weight: 800;
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 620px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 2rem;
+    }
+
+    /* ── CARDS ── */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(255,107,53,0.4); }
+
+    .card-icon {
+      width: 40px; height: 40px;
+      background: rgba(255,107,53,0.1);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .card p { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 1.5rem;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--surface); }
+    th {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.9rem 1.2rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 0.85rem 1.2rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .tag-high { background: rgba(255,107,53,0.15); color: var(--accent); }
+    .tag-med  { background: rgba(255,193,7,0.15);  color: var(--accent2); }
+    .tag-low  { background: rgba(122,122,154,0.15); color: var(--muted); }
+    .tag-blue { background: rgba(99,179,237,0.15);  color: #63b3ed; }
+
+    /* ── HU LIST ── */
+    .hu-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .hu-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+
+    .hu-code {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem; font-weight: 700;
+      color: var(--accent);
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.2);
+      border-radius: 5px;
+      padding: 0.2rem 0.5rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .hu-text { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+    .hu-text strong { color: var(--text); display: block; margin-bottom: 0.25rem; font-size: 0.9rem; }
+
+    /* ── ARCH DIAGRAM ── */
+    .arch-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-top: 1.5rem;
+      font-family: 'DM Sans', monospace;
+    }
+
+    .arch-layer {
+      display: flex; gap: 0.75rem; justify-content: center;
+      flex-wrap: wrap; margin-bottom: 0.5rem;
+    }
+
+    .arch-node {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1.1rem;
+      font-size: 0.8rem; font-weight: 500;
+      text-align: center;
+      min-width: 110px;
+    }
+
+    .arch-node.accent { border-color: var(--accent); color: var(--accent); background: rgba(255,107,53,0.07); }
+    .arch-node.yellow { border-color: var(--accent2); color: var(--accent2); background: rgba(255,193,7,0.07); }
+    .arch-node.blue   { border-color: #63b3ed; color: #63b3ed; background: rgba(99,179,237,0.07); }
+
+    .arch-arrow {
+      text-align: center; color: var(--muted);
+      font-size: 1.2rem; margin: 0.2rem 0;
+    }
+
+    .arch-label {
+      text-align: center;
+      font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.4rem;
+    }
+
+    /* ── TEAM ── */
+    .team-grid { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    .team-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      flex: 1; min-width: 200px;
+    }
+    .team-card .avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(255,107,53,0.15);
+      border: 1px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+    .team-card h4 { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; }
+    .team-card p  { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* ── METH BLOCK ── */
+    .meth-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+
+    .meth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .meth-card h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem; font-weight: 700;
+      margin-bottom: 0.6rem;
+      color: var(--text);
+    }
+    .meth-card ul { list-style: none; }
+    .meth-card ul li {
+      font-size: 0.85rem; color: var(--muted);
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 0.5rem; align-items: flex-start;
+    }
+    .meth-card ul li:last-child { border-bottom: none; }
+    .meth-card ul li::before { content: '→'; color: var(--accent); flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    /* ── SCROLL ANIMATION ── */
+    .fade-in {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-in.visible { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Store<span>Search</span></div>
+  <div class="nav-links">
+    <a href="#pid" class="active">PID</a>
+    <a href="#sad">SAD</a>
+    <a href="#metodologia">Metodología</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="badge">📄 Documentación del Proyecto · 2025</div>
+  <h1>Store<em>Search</em></h1>
+  <p class="hero-sub">Plataforma web que permite a pequeños negocios crear y gestionar su propia tienda en línea de forma rápida, accesible y sin necesidad de conocimientos técnicos.</p>
+  <div class="hero-cta">
+    <a href="#pid" class="btn btn-primary">Ver Documentación</a>
+    <a href="#sad" class="btn btn-outline">Arquitectura</a>
+  </div>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <div class="val">3</div>
+      <div class="lbl">Integrantes</div>
+    </div>
+    <div class="hero-meta-item">
+      <div class="val">Scrumban</div>
+      <div class="lbl">Metodología</div>
+    </div>
+    <div class="hero-meta-item">
+      <div class="val">Web App</div>
+      <div class="lbl">Tipo</div>
+    </div>
+    <div class="hero-meta-item">
+      <div class="val">PyMEs</div>
+      <div class="lbl">Sector</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════
+     PID — DOCUMENTO DE INICIO DEL PROYECTO
+═══════════════════════════════════════════ -->
+<section id="pid" class="fade-in">
+  <div class="section-tag">01 — PID</div>
+  <h2>Documento de Inicio del Proyecto</h2>
+  <p class="section-desc">Contexto, problemática, requerimientos iniciales y objetivos que justifican el desarrollo de StoreSearch.</p>
+
+  <!-- Visión y Contexto -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">1.1 Visión y Contexto del Negocio</h3>
+  <div class="card-grid" style="margin-bottom:2.5rem;">
+    <div class="card">
+      <div class="card-icon">🛒</div>
+      <h3>Problema</h3>
+      <p>Los pequeños negocios en México carecen de herramientas accesibles para vender en línea. Crear una tienda propia requiere tiempo, dinero y conocimientos técnicos que la mayoría no tiene.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <h3>Solución</h3>
+      <p>StoreSearch ofrece una plataforma donde cualquier negocio puede crear su tienda en línea en minutos, gestionar su catálogo, recibir pedidos y cobrar sin necesitar un desarrollador.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">👥</div>
+      <h3>Usuario Final</h3>
+      <p>Dueños de pequeños negocios (tiendas, reposterías, artesanías, ropa, etc.) que quieren vender por internet sin experiencia técnica previa.</p>
+    </div>
+  </div>
+
+  <!-- Nombre del Proyecto -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">1.2 Nombre del Proyecto (Estructura Tridimensional)</h3>
+  <div class="card" style="margin-bottom:2.5rem;">
+    <p style="font-size:1rem; line-height:1.9;">
+      <strong style="color:var(--text);">🔷 Qué:</strong> <span style="color:var(--muted);">Plataforma web para la creación de tiendas en línea</span><br/>
+      <strong style="color:var(--text);">⚙️ Cómo:</strong> <span style="color:var(--muted);">Mediante arquitectura de microservicios y una interfaz de bajo código (low-code)</span><br/>
+      <strong style="color:var(--text);">📍 Para qué / Dónde:</strong> <span style="color:var(--muted);">Aplicado a la digitalización comercial de pequeños negocios (PyMEs)</span><br/>
+      <br/>
+      <strong style="color:var(--accent);">Título formal:</strong> <em style="color:var(--text);">"Plataforma web low-code para la creación de tiendas en línea mediante arquitectura de microservicios aplicada a pequeños negocios — StoreSearch"</em>
+    </p>
+  </div>
+
+  <!-- Glosario -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">1.3 Glosario de Términos</h3>
+  <div class="table-wrap" style="margin-bottom:2.5rem;">
+    <table>
+      <thead><tr><th>Término</th><th>Definición</th></tr></thead>
+      <tbody>
+        <tr><td><strong>StoreSearch</strong></td><td>Plataforma central que agrupa y publica las tiendas de los negocios registrados.</td></tr>
+        <tr><td><strong>Negocio / Vendedor</strong></td><td>Usuario que crea y administra su tienda dentro de la plataforma.</td></tr>
+        <tr><td><strong>Comprador</strong></td><td>Usuario final que navega y realiza compras en las tiendas publicadas.</td></tr>
+        <tr><td><strong>Catálogo</strong></td><td>Listado de productos con precio, descripción e imágenes administrado por el vendedor.</td></tr>
+        <tr><td><strong>Pedido</strong></td><td>Transacción generada cuando un comprador confirma la compra de uno o más productos.</td></tr>
+        <tr><td><strong>Dashboard</strong></td><td>Panel de control del vendedor para gestionar su tienda, productos y pedidos.</td></tr>
+        <tr><td><strong>Low-code</strong></td><td>Enfoque que permite configurar la tienda visualmente sin escribir código.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Historias de Usuario -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">1.4 Historias de Usuario (Product Backlog Inicial)</h3>
+  <div class="hu-list" style="margin-bottom:2.5rem;">
+    <div class="hu-item">
+      <span class="hu-code">HU-01</span>
+      <div class="hu-text">
+        <strong>Registro de negocio</strong>
+        Como dueño de un pequeño negocio, quiero registrar mi empresa en la plataforma para comenzar a vender en línea. <br/><em style="color:rgba(122,122,154,0.7); font-size:0.8rem;">✅ Criterio: El sistema valida nombre, correo y contraseña; envía confirmación por email.</em>
+      </div>
+    </div>
+    <div class="hu-item">
+      <span class="hu-code">HU-02</span>
+      <div class="hu-text">
+        <strong>Gestión de catálogo</strong>
+        Como vendedor, quiero agregar, editar y eliminar productos con foto, precio y descripción para mantener mi tienda actualizada. <br/><em style="color:rgba(122,122,154,0.7); font-size:0.8rem;">✅ Criterio: Los cambios se reflejan en tiempo real en la tienda pública.</em>
+      </div>
+    </div>
+    <div class="hu-item">
+      <span class="hu-code">HU-03</span>
+      <div class="hu-text">
+        <strong>Búsqueda de tiendas</strong>
+        Como comprador, quiero buscar tiendas por nombre o categoría para encontrar lo que necesito fácilmente. <br/><em style="color:rgba(122,122,154,0.7); font-size:0.8rem;">✅ Criterio: Resultados relevantes en menos de 2 segundos.</em>
+      </div>
+    </div>
+    <div class="hu-item">
+      <span class="hu-code">HU-04</span>
+      <div class="hu-text">
+        <strong>Carrito y compra</strong>
+        Como comprador, quiero agregar productos al carrito y realizar el pago en línea para completar mi pedido. <br/><em style="color:rgba(122,122,154,0.7); font-size:0.8rem;">✅ Criterio: Proceso de checkout en máximo 3 pasos; confirmación por correo.</em>
+      </div>
+    </div>
+    <div class="hu-item">
+      <span class="hu-code">HU-05</span>
+      <div class="hu-text">
+        <strong>Gestión de pedidos</strong>
+        Como vendedor, quiero ver y actualizar el estado de mis pedidos (pendiente, en camino, entregado) para atender a mis clientes. <br/><em style="color:rgba(122,122,154,0.7); font-size:0.8rem;">✅ Criterio: El comprador recibe notificación al cambiar el estado.</em>
+      </div>
+    </div>
+    <div class="hu-item">
+      <span class="hu-code">HU-06</span>
+      <div class="hu-text">
+        <strong>Personalización de tienda</strong>
+        Como vendedor, quiero elegir el nombre, logo y colores de mi tienda para reflejar mi imagen de marca. <br/><em style="color:rgba(122,122,154,0.7); font-size:0.8rem;">✅ Criterio: Cambios visibles al instante en la vista pública sin recargar.</em>
+      </div>
+    </div>
+  </div>
+
+  <!-- Objetivos y Restricciones -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">1.5 Objetivos y Restricciones</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <h3>Objetivo General</h3>
+      <p>Desarrollar una plataforma web que permita a pequeños negocios crear y operar su propia tienda en línea de forma autónoma, rápida y sin requerir conocimientos técnicos.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚠️</div>
+      <h3>Restricciones</h3>
+      <p>Equipo de 3 personas · Plazo académico semestral · Infraestructura cloud de bajo costo · Cumplimiento con Ley Federal de Protección de Datos (LFPD) y normativas de comercio electrónico en México.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">🏁</div>
+      <h3>Milestones Clave</h3>
+      <p>Sprint 1: Registro y autenticación · Sprint 2: Catálogo y tienda pública · Sprint 3: Carrito y pagos · Sprint 4: Pedidos y notificaciones · Sprint 5: Pruebas y despliegue.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════
+     SAD — DOCUMENTO DE ARQUITECTURA
+═══════════════════════════════════════════ -->
+<section id="sad" class="fade-in">
+  <div class="section-tag">02 — SAD</div>
+  <h2>Documento de Arquitectura de Software</h2>
+  <p class="section-desc">Decisiones técnicas, stack tecnológico y vista lógica del sistema StoreSearch.</p>
+
+  <!-- Reqs No Funcionales -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">2.1 Requerimientos No Funcionales</h3>
+  <div class="table-wrap" style="margin-bottom:2.5rem;">
+    <table>
+      <thead><tr><th>Atributo</th><th>Especificación</th><th>Prioridad</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Escalabilidad</strong></td><td>Soportar hasta 500 negocios simultáneos con 2,000 compradores concurrentes</td><td><span class="tag tag-high">Alta</span></td></tr>
+        <tr><td><strong>Disponibilidad</strong></td><td>Uptime mínimo de 99.5% mensual</td><td><span class="tag tag-high">Alta</span></td></tr>
+        <tr><td><strong>Seguridad</strong></td><td>Autenticación JWT + OAuth2, cifrado HTTPS/TLS, contraseñas con bcrypt</td><td><span class="tag tag-high">Alta</span></td></tr>
+        <tr><td><strong>Rendimiento</strong></td><td>Tiempo de respuesta &lt; 300ms en búsqueda de tiendas y productos</td><td><span class="tag tag-med">Media</span></td></tr>
+        <tr><td><strong>Usabilidad</strong></td><td>Score SUS ≥ 75; interfaz responsive (móvil y escritorio)</td><td><span class="tag tag-med">Media</span></td></tr>
+        <tr><td><strong>Mantenibilidad</strong></td><td>Cobertura de pruebas unitarias ≥ 70%; código documentado con JSDoc</td><td><span class="tag tag-low">Media-Baja</span></td></tr>
+        <tr><td><strong>Portabilidad</strong></td><td>Despliegue en contenedores Docker; compatible con cualquier proveedor cloud</td><td><span class="tag tag-low">Baja</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Vista Lógica -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">2.2 Vista Lógica — Arquitectura de Alto Nivel</h3>
+  <p style="color:var(--muted); font-size:0.9rem; margin-bottom:0.5rem; line-height:1.7;">
+    StoreSearch utiliza una arquitectura de <strong style="color:var(--text);">Monolito Modular</strong> con separación clara de capas (Presentación → API → Lógica de Negocio → Persistencia), apropiada para un equipo pequeño con iteraciones rápidas. Cada módulo es independiente y puede migrarse a microservicios en versiones futuras.
+  </p>
+  <div class="arch-box">
+    <div class="arch-label">Capa de Presentación</div>
+    <div class="arch-layer">
+      <div class="arch-node accent">React + Vite<br/><small>Web App</small></div>
+      <div class="arch-node accent">Tienda Pública<br/><small>Vista comprador</small></div>
+      <div class="arch-node accent">Dashboard<br/><small>Vista vendedor</small></div>
+    </div>
+    <div class="arch-arrow">↓ REST API / JSON ↓</div>
+    <div class="arch-label">Capa de API y Lógica</div>
+    <div class="arch-layer">
+      <div class="arch-node yellow">Auth Module<br/><small>JWT + OAuth2</small></div>
+      <div class="arch-node yellow">Store Module<br/><small>Tiendas & catálogo</small></div>
+      <div class="arch-node yellow">Order Module<br/><small>Pedidos & pagos</small></div>
+      <div class="arch-node yellow">Search Module<br/><small>Búsqueda & filtros</small></div>
+    </div>
+    <div class="arch-arrow">↓ ORM / Queries ↓</div>
+    <div class="arch-label">Capa de Persistencia</div>
+    <div class="arch-layer">
+      <div class="arch-node blue">MySQL<br/><small>Datos relacionales</small></div>
+      <div class="arch-node blue">Redis<br/><small>Caché & sesiones</small></div>
+      <div class="arch-node blue">Cloud Storage<br/><small>Imágenes productos</small></div>
+    </div>
+  </div>
+  <br/>
+
+  <!-- Stack Tecnológico -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-bottom:1rem; color:var(--accent);">2.3 Stack Tecnológico</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Capa / Componente</th><th>Tecnología</th><th>Versión</th><th>Razón de Elección</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Frontend</strong></td><td>React + Vite</td><td>18.x / 5.x</td><td>Componentes reutilizables, hot reload rápido, ecosistema amplio</td></tr>
+        <tr><td><strong>Backend</strong></td><td>Node.js + Express</td><td>20.x LTS</td><td>JavaScript full-stack, agilidad de desarrollo, gran comunidad</td></tr>
+        <tr><td><strong>Base de Datos</strong></td><td>MySQL</td><td>8.x</td><td>Relacional, soporte sólido para transacciones de pedidos y pagos</td></tr>
+        <tr><td><strong>Caché</strong></td><td>Redis</td><td>7.x</td><td>Búsquedas rápidas y gestión de sesiones de usuario</td></tr>
+        <tr><td><strong>Autenticación</strong></td><td>JWT + bcrypt</td><td>Latest</td><td>Estándar seguro, sin estado (stateless), fácil integración</td></tr>
+        <tr><td><strong>Contenedores</strong></td><td>Docker + Docker Compose</td><td>Latest</td><td>Entornos consistentes entre desarrollo y producción</td></tr>
+        <tr><td><strong>Control de Versiones</strong></td><td>Git + GitHub</td><td>Latest</td><td>Colaboración en equipo, CI/CD con GitHub Actions</td></tr>
+        <tr><td><strong>Despliegue</strong></td><td>Vercel (front) + Render (back)</td><td>—</td><td>Gratuito para proyectos académicos, despliegue automático</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider"/>
+
+<!-- ══════════════════════════════════════════
+     METODOLOGÍA
+═══════════════════════════════════════════ -->
+<section id="metodologia" class="fade-in">
+  <div class="section-tag">03 — Metodología</div>
+  <h2>Metodología de Desarrollo Seleccionada</h2>
+  <p class="section-desc">Justificación del enfoque Scrumban adoptado por el equipo para el desarrollo de StoreSearch.</p>
+
+  <div class="card" style="margin-bottom:2rem; border-color:rgba(255,107,53,0.3);">
+    <p style="font-size:1rem; line-height:1.8; color:var(--muted);">
+      Para este proyecto se ha seleccionado la metodología <strong style="color:var(--accent);">Scrumban</strong> — combinación de Scrum y Kanban — debido a que la naturaleza de sus requisitos es <strong style="color:var(--text);">cambiante y evolutiva</strong>, lo que exige un enfoque que priorice la flexibilidad, las entregas incrementales y la gestión visual del flujo de trabajo.
+      <br/><br/>
+      Esta elección mitiga el riesgo tecnológico al adaptarse a un nivel de incertidumbre <strong style="color:var(--text);">alto</strong> (primera versión del producto, usuarios nuevos), se alinea con la disponibilidad del cliente para recibir feedback de forma <strong style="color:var(--text);">continua</strong>, y optimiza la dinámica de un equipo de <strong style="color:var(--text);">3 integrantes</strong> mediante el uso de <strong style="color:var(--text);">GitHub Projects</strong> para la gestión visual de tareas y roles.
+    </p>
+  </div>
+
+  <div class="meth-grid">
+    <div class="meth-card">
+      <h4>🔄 De Scrum tomamos</h4>
+      <ul>
+        <li>Sprints de 2 semanas con entregables funcionales</li>
+        <li>Product Backlog priorizado con historias de usuario</li>
+        <li>Sprint Review con demostración al equipo</li>
+        <li>Roles definidos: Product Owner, Dev Team</li>
+      </ul>
+    </div>
+    <div class="meth-card">
+      <h4>📋 De Kanban tomamos</h4>
+      <ul>
+        <li>Tablero visual con columnas: Backlog → En Progreso → Review → Done</li>
+        <li>Límite de trabajo en progreso (WIP limit) por persona</li>
+        <li>Flujo continuo sin esperar fin de sprint para mover tareas</li>
+        <li>Métricas de velocidad del equipo (lead time)</li>
+      </ul>
+    </div>
+    <div class="meth-card">
+      <h4>✅ Ventajas para StoreSearch</h4>
+      <ul>
+        <li>Equipo pequeño (3 personas) sin roles fijos rígidos</li>
+        <li>Requisitos que evolucionan según feedback de usuarios</li>
+        <li>Permite entregar valor en cada sprint</li>
+        <li>GitHub Projects integrado con el repositorio del código</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Equipo -->
+  <h3 style="font-family:'Syne',sans-serif; font-size:1.1rem; margin-top:2.5rem; margin-bottom:0.5rem; color:var(--accent);">Equipo de Desarrollo</h3>
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="avatar">P1</div>
+      <h4>Integrante 1</h4>
+      <p>Product Owner · Backend Developer</p>
+    </div>
+    <div class="team-card">
+      <div class="avatar">P2</div>
+      <h4>Integrante 2</h4>
+      <p>Frontend Developer · UX/UI</p>
+    </div>
+    <div class="team-card">
+      <div class="avatar">P3</div>
+      <h4>Integrante 3</h4>
+      <p>Full Stack · DevOps</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  StoreSearch · Documento de Arquitectura de Software · 2025 · Desarrollado con GitHub Pages
+</footer>
+
+<script>
+  // Fade in on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Active nav link
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
